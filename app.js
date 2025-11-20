@@ -1,4 +1,4 @@
-// 1. Firebase SDK에서 필요한 함수들을 import 합니다.
+// 1. Firebase SDK import (기존과 동일)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 import { 
     getDatabase, 
@@ -15,13 +15,11 @@ import {
     signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
-
-// 2. 사용자님의 Firebase 구성 정보
-// [주의!] databaseURL을 꼭 추가하세요. (Firebase 콘솔에서 복사)
+// 2. Firebase 구성 정보 (사용자 정보 유지)
 const firebaseConfig = {
   apiKey: "AIzaSyAdI7FdbsMsF7JJnOIVX-ymAXlfCIhyS48",
   authDomain: "dong-a-lee-project.firebaseapp.com",
-  databaseURL: "https://dong-a-lee-project-default-rtdb.firebaseio.com", // ◀◀ 본인 DB URL로 수정
+  databaseURL: "https://dong-a-lee-project-default-rtdb.firebaseio.com", 
   projectId: "dong-a-lee-project",
   storageBucket: "dong-a-lee-project.firebasestorage.app",
   messagingSenderId: "987183484156",
@@ -29,13 +27,12 @@ const firebaseConfig = {
   measurementId: "G-T76XE25417"
 };
 
-// 3. Firebase 앱 초기화 및 서비스 가져오기
+// 3. 앱 초기화
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-
-// 4. UI 요소 가져오기
+// 4. DOM 요소 선택
 const grid = document.getElementById('cell-grid');
 const loginContainer = document.getElementById('login-container');
 const googleLoginButton = document.getElementById('google-login-button');
@@ -43,20 +40,21 @@ const adminControls = document.getElementById('admin-controls');
 const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 const logoutButton = document.getElementById('logout-button');
-// const adminUserEmail = document.getElementById('admin-user-email'); // ◀◀ 이메일 표시 요소 제거
 
-
-// 5. 24개 칸 UI 동적 생성 (단순 그리드)
+// 5. 24개 칸 동적 생성 (디자인 개선을 위해 텍스트 포맷 단순화)
 const TOTAL_CELLS = 24;
+
 for (let i = 1; i <= TOTAL_CELLS; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
     cell.id = `cell-${i}`;
-    cell.innerText = `칸 ${i}`;
+    // [수정] "칸 1" 대신 깔끔하게 숫자만 "1" 또는 "No.1" 등으로 변경 가능. 
+    // 여기서는 가독성을 위해 숫자만 크게 표시하거나 "1번" 형태로 추천.
+    cell.innerText = `${i}`; 
     grid.appendChild(cell);
 }
 
-// 6. [핵심-관람자] Realtime Database 구독 설정
+// 6. Realtime Database 구독 (상태 실시간 반영)
 const cellsRef = ref(db, 'board/cells');
 onValue(cellsRef, (snapshot) => {
     const cellsData = snapshot.val();
@@ -76,24 +74,20 @@ onValue(cellsRef, (snapshot) => {
     }
 });
 
-// 7. [수정됨] 인증 상태 리스너 (이메일 표시 로직 제거)
+// 7. 인증 상태 관리
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // 로그인된 상태
         console.log("관리자 로그인됨:", user.email);
         loginContainer.style.display = 'none';
         adminControls.style.display = 'block';
-        // 이메일 표시 로직 제거 
     } else {
-        // 로그아웃된 상태
         console.log("로그아웃됨");
         loginContainer.style.display = 'block';
         adminControls.style.display = 'none';
-        // 이메일 초기화 로직 제거
     }
 });
 
-// 8. [기능 유지] Enter 키 이벤트 리스너 추가
+// 8. 엔터키 입력 처리
 messageInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
         event.preventDefault(); 
@@ -101,76 +95,60 @@ messageInput.addEventListener('keydown', (event) => {
     }
 });
 
-// 9. [핵심-관리자] 상태 변경(토글) 버튼 로직 (매핑 로직 유지)
+// 9. 상태 변경 버튼 로직
 sendButton.addEventListener('click', async () => {
     const message = messageInput.value.trim();
     if (!message) return;
 
     let cellKey = null;
 
-    // 🔽🔽🔽 [메시지-칸 매핑 로직 시작] 🔽🔽🔽
-    
-    // 1번 칸: '0001258867' 입력 시 신호
+    // --- [매핑 로직] ---
     if (message === '0001258867') {
         cellKey = 'cell-1';
     } 
-    // 2번 칸부터 24번 칸까지 주석 예시 유지
-    /*
-    else if (message === 'Message B') {
-        cellKey = 'cell-2';
-    }
-    else if (message === '3333') {
-        cellKey = 'cell-3';
-    }
-    // ... 계속 추가 가능 ...
+    /* 추가 매핑 예시
+    else if (message === '학생2') { cellKey = 'cell-2'; }
     */
-    
-    // 🔽🔽🔽 [메시지-칸 매핑 로직 끝] 🔽🔽🔽
+    // -----------------
 
-
-    // 10. 일치하는 메시지 없으면 경고 표시 및 중단
     if (cellKey === null) {
-        alert(`인식할 수 없는 메시지입니다: ${message}`);
+        alert(`등록되지 않은 신호입니다: ${message}`);
         return;
     }
     
-    // 11. 데이터베이스 토글 및 업데이트
     const targetCellRef = ref(db, `board/cells/${cellKey}`);
 
     try {
         const snapshot = await get(targetCellRef);
         const currentValue = snapshot.val();
-        const newValue = !currentValue;
-        
-        await set(targetCellRef, newValue);
+        await set(targetCellRef, !currentValue);
         messageInput.value = '';
     } catch (error) {
         console.error("데이터 쓰기 오류:", error);
-        alert("데이터 업데이트에 실패했습니다. (보안 규칙의 UID를 확인하거나 관리자로 로그인했는지 확인하세요.)");
+        alert("업데이트 실패: 관리자 권한을 확인하세요.");
     }
 });
 
-// 12. Google 로그인 버튼 로직
+// 10. Google 로그인
 googleLoginButton.addEventListener('click', async () => {
     const provider = new GoogleAuthProvider();
     try {
         await signInWithPopup(auth, provider);
     } catch (error) {
-        console.error("Google 로그인 오류:", error.code, error.message);
+        console.error("로그인 오류:", error);
         if (error.code === 'auth/unauthorized-domain') {
-            alert("로그인 오류: 현재 웹 주소가 Firebase에 등록되지 않았습니다. Firebase 콘솔 > Authentication > Settings > Authorized domains에 이 주소를 추가해야 합니다.");
-        } else if (error.code !== 'auth/popup-closed-by-user') {
-            alert(`로그인 오류: ${error.message}`);
+            alert("Firebase 콘솔에서 이 도메인을 승인된 도메인 목록에 추가해야 합니다.");
+        } else {
+            alert(`로그인 실패: ${error.message}`);
         }
     }
 });
 
-// 13. 관리자 로그아웃 버튼 로직
+// 11. 로그아웃
 logoutButton.addEventListener('click', async () => {
     try {
         await signOut(auth);
     } catch (error) {
         console.error("로그아웃 오류:", error);
-        alert("로그아웃에 실패했습니다.");
     }
 });
