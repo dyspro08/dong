@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>실시간 상태 보드</title>
+    <style>
+        /* 24개 칸의 기본 스타일 */
+        .cell-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        .cell {
+            width: 100px; height: 100px;
+            border: 1px solid #ccc;
+            background-color: #eee;
+            transition: background-color 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        /* '불이 켜진' 스타일 */
+        .cell.lit {
+            background-color: #fceb3a; /* 노란색 */
+            color: black;
+            font-weight: bold;
+        }
+        /* 입력자 전용 UI (처음엔 숨김) */
+        .admin-controls { display: none; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>실시간 24칸 상태 보드</h2>
+    <div id="cell-grid" class="cell-grid">
+        </div>
+
+    <div class="admin-controls" id="admin-controls">
+        <h3>관리자 입력</h3>
+        <input type="text" id="message-input" placeholder="메시지 입력 (예: '칸 5')">
+        <button id="send-button">상태 변경</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+
+    <script src="app.js"></script>
+</body>
+</html>
