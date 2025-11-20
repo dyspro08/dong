@@ -11,7 +11,6 @@ import {
     getAuth, 
     onAuthStateChanged,
     signOut,
-    // 🔽 Google 로그인을 위해 추가된 함수 🔽
     GoogleAuthProvider,
     signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
@@ -38,15 +37,15 @@ const auth = getAuth(app);
 
 // 4. UI 요소 가져오기
 const grid = document.getElementById('cell-grid');
-const loginContainer = document.getElementById('login-container'); // 🔽 변경
-const googleLoginButton = document.getElementById('google-login-button'); // 🔽 변경
+const loginContainer = document.getElementById('login-container');
+const googleLoginButton = document.getElementById('google-login-button');
 const adminControls = document.getElementById('admin-controls');
 const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 const logoutButton = document.getElementById('logout-button');
 const adminUserEmail = document.getElementById('admin-user-email');
 
-// 5. 24개 칸 UI 동적 생성 (이전과 동일)
+// 5. 24개 칸 UI 동적 생성
 for (let i = 1; i <= 24; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
@@ -55,7 +54,7 @@ for (let i = 1; i <= 24; i++) {
     grid.appendChild(cell);
 }
 
-// 6. [핵심-관람자] Realtime Database 구독 설정 (이전과 동일)
+// 6. [핵심-관람자] Realtime Database 구독 설정
 const cellsRef = ref(db, 'board/cells');
 onValue(cellsRef, (snapshot) => {
     const cellsData = snapshot.val();
@@ -73,65 +72,91 @@ onValue(cellsRef, (snapshot) => {
     }
 });
 
-// 7. [핵심-관리자] 인증 상태 리스너 (UI 숨김/표시 로직 변경)
+// 7. [핵심-관리자] 인증 상태 리스너
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // 로그인된 상태
         console.log("관리자 로그인됨:", user.email);
-        loginContainer.style.display = 'none';    // 🔽 로그인 버튼 숨기기
-        adminControls.style.display = 'block';  // 관리자 입력창 보이기
+        loginContainer.style.display = 'none';
+        adminControls.style.display = 'block';
         adminUserEmail.innerText = user.email;
     } else {
         // 로그아웃된 상태
         console.log("로그아웃됨");
-        loginContainer.style.display = 'block';   // 🔽 로그인 버튼 보이기
-        adminControls.style.display = 'none';   // 관리자 입력창 숨기기
+        loginContainer.style.display = 'block';
+        adminControls.style.display = 'none';
         adminUserEmail.innerText = "";
     }
 });
 
-// 8. [핵심-관리자] 상태 변경(토글) 버튼 로직 (이전과 동일)
+// 8. [핵심-관리자] 상태 변경(토글) 버튼 로직 (★수정된 부분★)
 sendButton.addEventListener('click', async () => {
-    const message = messageInput.value.trim();
+    const message = messageInput.value.trim(); // 입력된 메시지
     if (!message) return;
 
-    const cellKey = message.replace('칸 ', 'cell-');
+    let cellKey = null; // DB에 저장할 최종 키 (예: "cell-1")
+
+    // 🔽🔽🔽 [메시지-칸 매핑 로직 시작] 🔽🔽🔽
     
-    const cellNum = parseInt(cellKey.split('-')[1]);
-    if (isNaN(cellNum) || cellNum < 1 || cellNum > 24) {
-        alert("잘못된 메시지입니다 (예: '칸 1' ~ '칸 24')");
+    // 1번 칸: '0001258867' 입력 시 신호
+    if (message === '0001258867') {
+        cellKey = 'cell-1';
+    } 
+    // 2번 칸: 'Message B' 입력 시 신호 (주석 예시)
+    /*
+    else if (message === 'Message B') {
+        cellKey = 'cell-2';
+    }
+    // 3번 칸: '3333' 입력 시 신호 (주석 예시)
+    else if (message === '3333') {
+        cellKey = 'cell-3';
+    }
+    // 4번 칸 (주석 예시)
+    else if (message === 'Message D') {
+        cellKey = 'cell-4';
+    }
+    // 5번 칸 (주석 예시)
+    else if (message === '55555') {
+        cellKey = 'cell-5';
+    }
+    // 6번 칸 ~ 24번 칸까지 필요에 따라 위의 패턴을 복사하여 사용하세요.
+    // else if (message === 'Message 24') { cellKey = 'cell-24'; }
+    */
+    
+    // 🔽🔽🔽 [메시지-칸 매핑 로직 끝] 🔽🔽🔽
+
+
+    // 9. 일치하는 메시지 없으면 경고 표시 및 중단
+    if (cellKey === null) {
+        alert(`인식할 수 없는 메시지입니다: ${message}`);
         return;
     }
-
+    
+    // 10. 데이터베이스 토글 및 업데이트
     const targetCellRef = ref(db, `board/cells/${cellKey}`);
 
     try {
         const snapshot = await get(targetCellRef);
         const currentValue = snapshot.val();
         const newValue = !currentValue;
+        
         await set(targetCellRef, newValue);
         messageInput.value = '';
     } catch (error) {
         console.error("데이터 쓰기 오류:", error);
-        alert("데이터 업데이트에 실패했습니다. (보안 규칙의 UID를 확인하세요!)");
+        alert("데이터 업데이트에 실패했습니다. (보안 규칙의 UID를 확인하거나 관리자로 로그인했는지 확인하세요.)");
     }
 });
 
-// 9. 🔽 [핵심-관리자] Google 로그인 버튼 로직 (수정됨) 🔽
+// 9. [핵심-관리자] Google 로그인 버튼 로직 (이전과 동일)
 googleLoginButton.addEventListener('click', async () => {
-    // Google 로그인 공급자 객체 생성
     const provider = new GoogleAuthProvider();
-
     try {
-        // 팝업창으로 Google 로그인 시도
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         console.log("Google 로그인 성공:", user.email);
-        // 로그인이 성공하면 7번 onAuthStateChanged 리스너가
-        // 알아서 UI를 변경해 줍니다.
     } catch (error) {
         console.error("Google 로그인 오류:", error.code, error.message);
-        // (예: 팝업창을 닫은 경우 'auth/popup-closed-by-user')
     }
 });
 
@@ -139,8 +164,6 @@ googleLoginButton.addEventListener('click', async () => {
 logoutButton.addEventListener('click', async () => {
     try {
         await signOut(auth);
-        // 로그아웃이 성공하면 7번 onAuthStateChanged 리스너가
-        // 알아서 UI를 변경해 줍니다.
     } catch (error) {
         console.error("로그아웃 오류:", error);
     }
