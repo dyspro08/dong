@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 상태 보드 (v9)</title>
+    <title>실시간 상태 보드 (Google 로그인)</title>
     <style>
         body { font-family: sans-serif; padding: 20px; }
         .cell-grid {
@@ -14,7 +14,7 @@
             margin-bottom: 30px;
         }
         .cell {
-            aspect-ratio: 1 / 1; /* 1:1 비율 */
+            aspect-ratio: 1 / 1;
             border: 1px solid #ccc;
             background-color: #eee;
             color: #555;
@@ -25,7 +25,6 @@
             font-size: 0.9em;
             border-radius: 8px;
         }
-        /* 불이 켜진 스타일 */
         .cell.lit {
             background-color: #fceb3a;
             color: black;
@@ -33,18 +32,26 @@
             box-shadow: 0 0 10px #fceb3a;
         }
         
-        /* 로그인 및 관리자 UI */
-        .login-form, .admin-controls {
+        /* 로그인 버튼 */
+        .login-container {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+            max-width: 600px;
+            text-align: center;
+        }
+        /* 관리자 UI */
+        .admin-controls {
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 8px;
             background: #f9f9f9;
             max-width: 600px;
+            display: none; /* 평소엔 숨김 */
         }
-        .login-form { margin-bottom: 20px; }
-        .admin-controls { display: none; } /* 평소엔 숨김 */
         
-        input[type="email"], input[type="password"], input[type="text"] {
+        input[type="text"] {
             width: calc(100% - 20px);
             padding: 10px;
             margin-bottom: 10px;
@@ -53,14 +60,18 @@
         }
         button {
             padding: 10px 15px;
-            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
-        button:hover { background-color: #0056b3; }
-        .error-message { color: red; font-size: 0.9em; }
+        #google-login-button {
+            background-color: #4285F4; /* Google Blue */
+            font-weight: bold;
+        }
+        #google-login-button:hover { background-color: #357ae8; }
+        #send-button { background-color: #007bff; }
+        #logout-button { background-color: #dc3545; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -70,13 +81,10 @@
         <!-- 24개 칸이 JavaScript로 생성될 곳 -->
     </div>
 
-    <!-- 1. 관리자 로그인 폼 -->
-    <div class="login-form" id="login-form">
+    <!-- 1. 관리자 로그인 버튼 -->
+    <div class="login-container" id="login-container">
         <h4>관리자 로그인</h4>
-        <input type="email" id="admin-email" placeholder="이메일">
-        <input type="password" id="admin-password" placeholder="비밀번호">
-        <button id="login-button">로그인</button>
-        <p id="login-error" class="error-message"></p>
+        <button id="google-login-button">Google 계정으로 로그인</button>
     </div>
 
     <!-- 2. 메시지 입력 (관리자 전용) -->
@@ -84,13 +92,12 @@
         <h3>관리자 입력 (<span id="admin-user-email"></span>)</h3>
         <input type="text" id="message-input" placeholder="메시지 입력 (예: '칸 5')">
         <button id="send-button">상태 변경</button>
-        <button id="logout-button" style="background-color: #dc3545; margin-left: 10px;">로그아웃</button>
+        <button id="logout-button">로그아웃</button>
     </div>
 
     <!-- 
-      [중요!]
-      Firebase SDK 로드 및 app.js 연결
-      import 구문을 사용하기 위해 type="module"이 필수입니다.
+      [중요!] type="module"
+      Firebase v9 SDK(import)를 사용하기 위해 필수입니다.
     -->
     <script type="module" src="app.js"></script>
 
