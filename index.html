@@ -5,127 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>기술실 출석표</title>
     <style>
+        /* 1. 전체 페이지 스타일: 깔끔한 폰트와 배경색 적용 */
         body {
-            font-family: 'Inter', sans-serif;
-            padding: 20px;
-            background-color: #f4f7f9;
-            text-align: center;
-        }
-        
-        /* 24칸을 표시하는 그리드 레이아웃 */
-        #cell-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr); /* 가로 6칸 */
-            grid-template-rows: repeat(4, 1fr); /* 세로 4칸 */
-            gap: 15px;
-            max-width: 960px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5; /* 눈이 편안한 연한 회색 배경 */
+            color: #333;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
+        h2 {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        /* 2. 그리드 컨테이너 스타일: 카드 형태의 흰색 배경 */
+        #cell-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* 가로 6칸 유지 */
+            gap: 16px; /* 칸 사이 간격 조정 */
+            
+            width: 100%;
+            max-width: 1000px; /* 전체 폭 제한 */
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 24px; /* 둥근 모서리 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* 부드러운 그림자 */
+        }
+
+        /* 3. 개별 칸(Cell) 스타일: 입체감 있는 카드 디자인 */
         .cell {
-            aspect-ratio: 1 / 1;
-            border: 2px solid #ddd;
-            background-color: #e0e0e0;
-            color: #555;
-            transition: background-color 0.3s, transform 0.1s;
+            aspect-ratio: 1 / 1; /* 정사각형 유지 */
+            background-color: #f8f9fa; /* 기본: 아주 연한 회색 */
+            border: 1px solid #edf2f7; /* 아주 연한 테두리 */
+            border-radius: 16px;
+            
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2em;
-            font-weight: bold;
-            border-radius: 8px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #6c757d; /* 비활성 글자색: 회색 */
+            
+            cursor: default;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 부드러운 애니메이션 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
-        /* 불이 켜진 상태 스타일 */
+        /* 4. 불이 켜진 상태 (Lit): 확실한 강조 효과 */
         .cell.lit {
-            background-color: #4CAF50; /* 녹색 */
+            background-color: #4CAF50; /* 메인 녹색 */
+            background-image: linear-gradient(135deg, #66bb6a, #43a047); /* 세련된 그라데이션 */
             color: white;
-            border-color: #388E3C;
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
-        }
-        
-        /* 공통 컨테이너 스타일 */
-        .login-container, .admin-controls {
-            max-width: 500px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
+            border-color: transparent;
+            
+            /* 팝업 효과 및 발광 효과 */
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4); 
+            
+            font-weight: 700;
+            font-size: 1.2rem;
         }
 
-        .admin-controls {
-            display: none; /* JS가 로그인 상태에 따라 변경 */
-            background-color: #e8f5e9;
-            border: 1px solid #c8e6c9;
+        /* 모바일 반응형: 화면이 작아지면 칸 크기 자동 조절 */
+        @media (max-width: 768px) {
+            #cell-grid {
+                grid-template-columns: repeat(4, 1fr); /* 모바일에서는 4칸씩 */
+                padding: 20px;
+                gap: 10px;
+            }
+            h2 { font-size: 1.5rem; }
         }
+
+        /* --- 관리자 컨트롤 스타일 (기존 기능 유지하되 디자인 개선) --- */
+        .login-container, .admin-controls {
+            margin-top: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .admin-controls { display: none; border: 1px solid #e0e0e0; }
         
         .admin-input-group {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 15px;
         }
-        
+
         input[type="text"] {
             flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
         }
-        
+        input[type="text"]:focus { border-color: #4CAF50; }
+
         button {
-            padding: 10px 15px;
-            color: white;
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.2s;
+            transition: transform 0.1s, opacity 0.2s;
         }
+        button:active { transform: scale(0.98); }
         
-        #google-login-button { background-color: #4285F4; }
-        #google-login-button:hover { background-color: #3367D6; }
-        #send-button { background-color: #28a745; }
-        #send-button:hover { background-color: #218838; }
-        #logout-button { background-color: #dc3545; }
-        #logout-button:hover { background-color: #c82333; }
-        
-        .admin-status {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-        }
+        #google-login-button { background-color: #4285F4; color: white; width: 100%; padding: 12px; }
+        #send-button { background-color: #4CAF50; color: white; }
+        #logout-button { background-color: #ff5252; color: white; }
+
     </style>
 </head>
 <body>
 
-    <h2 style="color: #343a40;">실시간 24칸 상태 보드</h2>
+    <h2>기술실 실시간 현황판</h2>
 
-    <!-- 24칸 상태를 표시할 그리드 -->
     <div id="cell-grid">
-        <!-- JS가 1번부터 24번 칸을 생성합니다. -->
-    </div>
+        </div>
 
-    <!-- 1. 관리자 로그인 버튼 -->
     <div class="login-container" id="login-container">
-        <h4>관리자 로그인</h4>
+        <h4 style="margin: 0 0 15px 0; color: #555;">관리자 접속</h4>
         <button id="google-login-button">Google 계정으로 로그인</button>
     </div>
 
-    <!-- 2. 메시지 입력 (관리자 전용) -->
     <div class="admin-controls" id="admin-controls">
-        <p class="admin-status">관리자 모드</p>
+        <p class="admin-status" style="color:#4CAF50; margin-bottom:10px;">● 관리자 모드 활성화</p>
         <div class="admin-input-group">
-            <input type="text" id="message-input" placeholder="자리 신호 메시지 입력">
-            <button id="send-button">상태 변경</button>
-            <button id="logout-button">로그아웃</button>
+            <input type="text" id="message-input" placeholder="자리 신호 입력 (예: 0001258867)">
+            <button id="send-button">전송</button>
         </div>
+        <button id="logout-button" style="margin-top: 10px; width: 100%; background-color: #f1f3f5; color: #555;">로그아웃</button>
     </div>
 
     <script type="module" src="app.js"></script>
