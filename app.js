@@ -36,74 +36,97 @@ const auth = getAuth(app);
 
 
 // 4. UI 요소 가져오기
-const grid = document.getElementById('cell-grid');
+const boardContainer = document.getElementById('board-container'); // 새 ID
 const loginContainer = document.getElementById('login-container');
 const googleLoginButton = document.getElementById('google-login-button');
 const adminControls = document.getElementById('admin-controls');
 const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 const logoutButton = document.getElementById('logout-button');
-const adminUserEmail = document.getElementById('admin-user-email');
 
-// 5. 24개 칸 UI 동적 생성
-for (let i = 1; i <= 24; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.id = `cell-${i}`;
-    cell.innerText = `칸 ${i}`;
-    grid.appendChild(cell);
+
+// 5. [수정됨] 24개 칸을 4개씩 6모둠으로 동적 생성
+const totalCells = 24;
+const cellsPerGroup = 4;
+const totalGroups = totalCells / cellsPerGroup;
+
+let cellCounter = 1;
+for (let g = 1; g <= totalGroups; g++) {
+    const group = document.createElement('div');
+    group.className = 'group';
+    
+    // 모둠 제목 추가
+    const groupTitle = document.createElement('div');
+    groupTitle.className = 'group-title';
+    groupTitle.innerText = `모둠 ${g}`;
+    group.appendChild(groupTitle);
+
+    const cellGroupGrid = document.createElement('div');
+    cellGroupGrid.className = 'cell-group-grid';
+
+    for (let c = 1; c <= cellsPerGroup; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.id = `cell-${cellCounter}`;
+        cell.innerText = `${cellCounter}번 자리`; // 1번부터 24번까지 표시
+        cellGroupGrid.appendChild(cell);
+        cellCounter++;
+    }
+    group.appendChild(cellGroupGrid);
+    boardContainer.appendChild(group);
 }
 
-// 6. [핵심-관람자] Realtime Database 구독 설정
+
+// 6. [핵심-관람자] Realtime Database 구독 설정 (변화 없음)
 const cellsRef = ref(db, 'board/cells');
 onValue(cellsRef, (snapshot) => {
     const cellsData = snapshot.val();
     console.log("데이터 변경 감지:", cellsData);
     if (cellsData) {
-        for (let i = 1; i <= 24; i++) {
+        for (let i = 1; i <= totalCells; i++) {
             const cellId = `cell-${i}`;
             const cellElement = document.getElementById(cellId);
-            if (cellsData[cellId] === true) {
-                cellElement.classList.add('lit');
-            } else {
-                cellElement.classList.remove('lit');
+            if (cellElement) { // 요소가 존재하는지 확인
+                if (cellsData[cellId] === true) {
+                    cellElement.classList.add('lit');
+                } else {
+                    cellElement.classList.remove('lit');
+                }
             }
         }
     }
 });
 
-// 7. [핵심-관리자] 인증 상태 리스너
+// 7. [수정됨] 인증 상태 리스너 (이메일 표시 제거)
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // 로그인된 상태
         console.log("관리자 로그인됨:", user.email);
         loginContainer.style.display = 'none';
         adminControls.style.display = 'block';
-        adminUserEmail.innerText = user.email;
+        // HTML에서 이메일 주소를 표시하는 span 태그가 사라졌으므로 이메일 설정 코드를 제거합니다.
     } else {
         // 로그아웃된 상태
         console.log("로그아웃됨");
         loginContainer.style.display = 'block';
         adminControls.style.display = 'none';
-        adminUserEmail.innerText = "";
     }
 });
 
-// 8. [핵심-관리자] Enter 키 이벤트 리스너 추가 (★새로 추가된 부분★)
+// 8. Enter 키 이벤트 리스너 추가 (변화 없음)
 messageInput.addEventListener('keydown', (event) => {
-    // 사용자가 'Enter' 키를 눌렀는지 확인합니다.
     if (event.key === 'Enter') {
-        event.preventDefault(); // Enter 키를 눌렀을 때 기본 동작(예: 폼 제출)을 막습니다.
-        sendButton.click(); // '상태 변경' 버튼의 클릭 이벤트를 수동으로 실행합니다.
+        event.preventDefault();
+        sendButton.click();
     }
 });
 
-// 9. [핵심-관리자] 상태 변경(토글) 버튼 로직
+// 9. [핵심-관리자] 상태 변경(토글) 버튼 로직 (변화 없음)
 sendButton.addEventListener('click', async () => {
-    const message = messageInput.value.trim(); // 입력된 메시지
+    const message = messageInput.value.trim();
     if (!message) return;
 
-    let cellKey = null; // DB에 저장할 최종 키 (예: "cell-1")
+    let cellKey = null;
 
     // 🔽🔽🔽 [메시지-칸 매핑 로직 시작] 🔽🔽🔽
     
@@ -137,7 +160,6 @@ sendButton.addEventListener('click', async () => {
 
     // 10. 일치하는 메시지 없으면 경고 표시 및 중단
     if (cellKey === null) {
-        // 사용자 지정 경고창을 사용합니다. (alert() 대신)
         alert(`인식할 수 없는 메시지입니다: ${message}`);
         return;
     }
@@ -158,7 +180,7 @@ sendButton.addEventListener('click', async () => {
     }
 });
 
-// 12. [핵심-관리자] Google 로그인 버튼 로직 (이전과 동일)
+// 12. Google 로그인 버튼 로직 (변화 없음)
 googleLoginButton.addEventListener('click', async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -170,7 +192,7 @@ googleLoginButton.addEventListener('click', async () => {
     }
 });
 
-// 13. 관리자 로그아웃 버튼 로직 (이전과 동일)
+// 13. 관리자 로그아웃 버튼 로직 (변화 없음)
 logoutButton.addEventListener('click', async () => {
     try {
         await signOut(auth);
