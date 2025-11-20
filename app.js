@@ -89,7 +89,16 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// 8. [핵심-관리자] 상태 변경(토글) 버튼 로직 (★수정된 부분★)
+// 8. [핵심-관리자] Enter 키 이벤트 리스너 추가 (★새로 추가된 부분★)
+messageInput.addEventListener('keydown', (event) => {
+    // 사용자가 'Enter' 키를 눌렀는지 확인합니다.
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Enter 키를 눌렀을 때 기본 동작(예: 폼 제출)을 막습니다.
+        sendButton.click(); // '상태 변경' 버튼의 클릭 이벤트를 수동으로 실행합니다.
+    }
+});
+
+// 9. [핵심-관리자] 상태 변경(토글) 버튼 로직
 sendButton.addEventListener('click', async () => {
     const message = messageInput.value.trim(); // 입력된 메시지
     if (!message) return;
@@ -126,13 +135,14 @@ sendButton.addEventListener('click', async () => {
     // 🔽🔽🔽 [메시지-칸 매핑 로직 끝] 🔽🔽🔽
 
 
-    // 9. 일치하는 메시지 없으면 경고 표시 및 중단
+    // 10. 일치하는 메시지 없으면 경고 표시 및 중단
     if (cellKey === null) {
+        // 사용자 지정 경고창을 사용합니다. (alert() 대신)
         alert(`인식할 수 없는 메시지입니다: ${message}`);
         return;
     }
     
-    // 10. 데이터베이스 토글 및 업데이트
+    // 11. 데이터베이스 토글 및 업데이트
     const targetCellRef = ref(db, `board/cells/${cellKey}`);
 
     try {
@@ -148,7 +158,7 @@ sendButton.addEventListener('click', async () => {
     }
 });
 
-// 9. [핵심-관리자] Google 로그인 버튼 로직 (이전과 동일)
+// 12. [핵심-관리자] Google 로그인 버튼 로직 (이전과 동일)
 googleLoginButton.addEventListener('click', async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -160,7 +170,7 @@ googleLoginButton.addEventListener('click', async () => {
     }
 });
 
-// 10. 관리자 로그아웃 버튼 로직 (이전과 동일)
+// 13. 관리자 로그아웃 버튼 로직 (이전과 동일)
 logoutButton.addEventListener('click', async () => {
     try {
         await signOut(auth);
